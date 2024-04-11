@@ -39,10 +39,12 @@ services:
     image: traefik/whoami
     command:
        - --name=service-envoy-1
+
   service-envoy-2:
     image: traefik/whoami
     command:
        - --name=service-envoy-2
+
   jaeger:
     image: jaegertracing/all-in-one:latest
     ports:
