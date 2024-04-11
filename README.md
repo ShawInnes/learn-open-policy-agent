@@ -17,21 +17,22 @@ This repo contains a docker-compose file which will create a small demo stack in
 @startuml Deployment Diagram
 
 actor user
-frame frame {
+frame demo {
     node envoy
     node service1
     node service2
     node opa
-    node jaeger
 }
 
-user -- envoy : http
-envoy -- service1 : http
-envoy -- service2 : http
-envoy -- opa : authz request
+node jaeger
 
-envoy -[dashed]- jaeger : otel trace
-opa -[dashed]- jaeger : otel trace
+user --> envoy : http
+envoy --> service1 : http
+envoy --> service2 : http
+envoy <--> opa : authz request
+
+envoy -[dashed]-> jaeger : otel trace
+opa -[dashed]-> jaeger : otel trace
 @enduml
 ```
 
