@@ -2,8 +2,27 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using OpaDemo;
+using OpenTelemetry;
+using OpenTelemetry.Exporter;
+using OpenTelemetry.Logs;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 
 var builder = WebApplication.CreateBuilder(args);
+var serviceName = "opa-dotnet-demo";
+
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resource => resource.AddService(serviceName))
+    .WithTracing(tracing => tracing
+        .AddAspNetCoreInstrumentation()
+        .AddOtlpExporter(o =>
+        {
+            o.Protocol = OtlpExportProtocol.Grpc;
+            o.Endpoint = new Uri("http://localhost:4317");
+            o.ExportProcessorType = ExportProcessorType.Simple;
+        }));
+
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -28,7 +47,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseMiddleware<OpaAuthorizationMiddleware>("http://localhost:8181/v1/data/example/allow");
+app.UseMiddleware<OpaAuthorizationMiddleware>("http://localhost:8181/v1/data/dotnet/authz/allow");
 app.UseRouting();
 
 app.UseAuthentication();

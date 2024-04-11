@@ -15,10 +15,18 @@ public class AuthorizationResult
     public string Reason { get; set; }
 }
 
-public class OpaAuthorizationMiddleware(RequestDelegate next, string opaUrl)
+public class OpaAuthorizationMiddleware
 {
+    private readonly RequestDelegate _next;
+    private readonly string _opaUrl;
     private readonly HttpClient _httpClient = new();
 
+    public OpaAuthorizationMiddleware(RequestDelegate next, string opaUrl)
+    {
+        _next = next;
+        _opaUrl = opaUrl;
+    }
+    
     public async Task InvokeAsync(HttpContext context)
     {
         // Evaluate the policy using OPA
@@ -34,7 +42,7 @@ public class OpaAuthorizationMiddleware(RequestDelegate next, string opaUrl)
 
         var jsonContent = JsonSerializer.Serialize(input);
         var requestContent = new StringContent(jsonContent, Encoding.UTF8, "application/json");
-        var response = await _httpClient.PostAsync(opaUrl, requestContent);
+        var response = await _httpClient.PostAsync(_opaUrl, requestContent);
 
         if (!response.IsSuccessStatusCode)
         {
@@ -48,7 +56,7 @@ public class OpaAuthorizationMiddleware(RequestDelegate next, string opaUrl)
         // Check if the request is authorized
         if (result.IsAuthorized)
         {
-            await next(context);
+            await _next(context);
         }
         else
         {
